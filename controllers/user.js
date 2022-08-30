@@ -1,6 +1,7 @@
 require("dotenv").config();
 const { Utils } = require("../middlewares/Utils");
 const User = require("../models/User");
+const Post = require("../models/Post");
 const Jwt = require("jsonwebtoken");
 
 module.exports.signUp = async (req, res, next) => {
@@ -52,6 +53,7 @@ module.exports.follow = async (req, res, next) => {
   try {
     const userId = req.user.user_name;
     const user = req.body.user_name;
+    const other1 = await User.findOne({ user_name: userId });
     const other = await User.findOne({ user_name: user });
     const doc = await User.findOneAndUpdate(userId, {
       $push: { following: user },
@@ -98,11 +100,20 @@ module.exports.unfollow = async (req, res, next) => {
 module.exports.profile = async (req, res, next) => {
   try {
     const user_name = req.user.user_name;
-    const user = await User.find(
+    const user = await User.findOne(
       { user_name: user_name },
       { __v: 0, token: 0, password: 0, _id: 0 }
     );
-    res.send(user);
+    const followingCount = user.following.length;
+    const followersCount = user.followers.length;
+    const postCount = await Post.findOne({ user_name: user_name })
+    .countDocuments();
+    res.json({
+      user: user,
+      followingCount: followingCount,
+      followersCount: followersCount,
+      postCount: postCount,
+    });
   } catch (error) {
     next(error);
   }
