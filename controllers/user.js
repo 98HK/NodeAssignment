@@ -52,7 +52,6 @@ module.exports.follow = async (req, res, next) => {
   try {
     const userId = req.user.user_name;
     const user = req.body.user_name;
-    const other1 = await User.findOne({ user_name: userId });
     const other = await User.findOne({ user_name: user });
     const doc = await User.findOneAndUpdate(userId, {
       $push: { following: user },
