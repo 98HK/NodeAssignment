@@ -48,59 +48,18 @@ module.exports.logout = async (req, res, next) => {
   }
 };
 
-module.exports.followers = async (req, res, next) => {
-  try {
-    const user = req.body.userId;
-    const userId = req.user.user_id;
-    const doc = await User.findByIdAndUpdate(
-      user,
-      {
-        $push: { followers: userId },
-      },
-      { new: true }
-    );
-    if (doc) {
-      res.send(`${doc.name} is now following you`);
-    } else {
-      res.status(400).send(`somthing went wrong`);
-    }
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports.unfollowers = async (req, res, next) => {
-  try {
-    const user = req.body.userId;
-    const userId = req.user.user_id;
-    const doc = await User.findByIdAndUpdate(
-      user,
-      {
-        $pull: { followers: userId },
-      },
-      { new: true }
-    );
-    if (doc) {
-      res.send(`${doc.name} is now Unfollowing you`);
-    } else {
-      res.status(400).send(`somthing went wrong`);
-    }
-  } catch (error) {
-    next(error);
-  }
-};
-
 module.exports.follow = async (req, res, next) => {
   try {
-    const userId = req.user.user_id;
-    const user = req.body.userId;
-    const other = await User.findById(user);
-    const doc = await User.findByIdAndUpdate(
-      userId,
-      {
-        $push: { following: user },
-      },
-      { new: true }
+    const userId = req.user.user_name;
+    const user = req.body.user_name;
+    const other1 = await User.findOne({ user_name: userId });
+    const other = await User.findOne({ user_name: user });
+    const doc = await User.findOneAndUpdate(userId, {
+      $push: { following: user },
+    });
+    await User.findOneAndUpdate(
+      { user_name: user },
+      { $push: { followers: userId } }
     );
     if (doc) {
       res.send(`You are now following ${other.name}`);
@@ -114,15 +73,18 @@ module.exports.follow = async (req, res, next) => {
 
 module.exports.unfollow = async (req, res, next) => {
   try {
-    const userId = req.user.user_id;
-    const user = req.body.userId;
-    const other = await User.findById(user);
-    const doc = await User.findByIdAndUpdate(
-      userId,
+    const userId = req.user.user_name;
+    const user = req.body.user_name;
+    const other = await User.findOne({ user_name: user });
+    const doc = await User.findOneAndUpdate(
+      { user_name: userId },
       {
         $pull: { following: user },
-      },
-      { new: true }
+      }
+    );
+    await User.findOneAndUpdate(
+      { user_name: user },
+      { $pull: { followers: userId } }
     );
     if (doc) {
       res.send(`You are now Unfollowing ${other.name}`);
